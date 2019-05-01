@@ -1,6 +1,8 @@
 ---
 title: "IB031_Pavel_Novak_semestral_project"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}

@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556826366612.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3559797653",
+    "id" : "C67BA22",
+    "lastKnownWriteTime" : 1556828107,
+    "last_content_update" : 1556828107582,
+    "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/titanic_compare_algorithm.R",
+    "project_path" : "titanic_compare_algorithm.R",
+    "properties" : {
+        "cursorPosition" : "21,60",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

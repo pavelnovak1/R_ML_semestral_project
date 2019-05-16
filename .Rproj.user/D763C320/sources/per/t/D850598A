@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1558003805832.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "358492540",
+    "id" : "D850598A",
+    "lastKnownWriteTime" : 1558005401,
+    "last_content_update" : 1558005401432,
+    "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/wine_prediction.R",
+    "project_path" : "wine_prediction.R",
+    "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

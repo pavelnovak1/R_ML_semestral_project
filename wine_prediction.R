@@ -1,3 +1,5 @@
+library(dplyr)
+library(RWeka)
 ###### loading data #######
 
 wine.all <- read.csv("winequalityN.csv")
@@ -9,7 +11,7 @@ summary(wine.all)
 
 ##### preprocessing #####
 
-wine.all <- wine.all[select(nrow(wine.all)), ]
+wine.all <- wine.all[sample(nrow(wine.all)), ]
 wine.all$quality <- as.factor(wine.all$quality)
 
 wine.all[is.na(wine.all$fixed.acidity), "fixed.acidity"] <- mean(wine.all$fixed.acidity, na.rm = T)
@@ -30,11 +32,23 @@ wine.test <- wine.all[3251:6497, ]
 
 ###### model ######
 
-model <- train(type ~ ., data = wine.train, method = "J48")
+model <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 200, A = F))
 prediction <- predict(model, wine.test)
 
-confmat <- table(prediction, wine.test$quality)
+references <- wine.test$quality
+
+confmat <- table(prediction, references)
 confmat
+
+accuracy2 <- confmat[1:1] + confmat[1,2]
+for(i in 2:6){
+  for(j in (i-1):(i+1)){
+    accuracy2 <- accuracy2 + confmat[i,j]
+  }
+}
+accuracy2 <- accuracy2 + confmat[7,6] + confmat[7,7]
+accuracy2 <- accuracy2 / sum(confmat)
+accuracy2
 
 accuracy <- sum(diag(confmat)) / sum(confmat)
 accuracy

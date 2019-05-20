@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1558323798071.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1726077338",
+    "id" : "D232FA2",
+    "lastKnownWriteTime" : 1558325792,
+    "last_content_update" : 1558325792169,
+    "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/studets_grades_prediction.R",
+    "project_path" : "studets_grades_prediction.R",
+    "properties" : {
+        "cursorPosition" : "29,0",
+        "scrollLine" : "8",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

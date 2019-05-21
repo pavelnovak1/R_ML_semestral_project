@@ -11,7 +11,7 @@ summary(cars.all)
 
 cars.train <- cars.all[1:863, ]
 cars.test <- cars.all[864:1727, ]
-model.cars <- J48(class ~ ., cars.train, control = Weka_control(R = T, M = 10, A = T))
+model.cars <- J48(class ~ ., cars.train, control = Weka_control(R = F, M =70, A = F))
 
 prediction.cars <- predict(model.cars, cars.test)
 references.cars <- cars.test$class

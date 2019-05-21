@@ -12,9 +12,12 @@ summary(wine.all)
 
 
 ### baseline model ####
+
 wine.all$quality <- as.factor(wine.all$quality)
 wine.train <- wine.all[1:3248, ]
 wine.test <- wine.all[3249:6497, ]
+
+### raw model without any preprocessing and tuning
 model.wine.raw <- J48(quality ~ ., data = wine.train)
 prediction.wine.raw <- predict(model.wine.raw, newdata = wine.test)
 references.wine.raw <- wine.test$quality
@@ -40,6 +43,7 @@ wine.all[is.na(wine.all$sulphates), "sulphates"] <- mean(wine.all$sulphates, na.
 ## merging category no.3 to no.4 and no.9 to no.8
 wine.all[(wine.all$quality == 3), "quality"] <- 4
 wine.all[(wine.all$quality == 9), "quality"] <- 8
+wine.all$quality <- droplevels(wine.all$quality, exclude = c(3,9))
 wine.all$quality <- as.factor(wine.all$quality)
 
 wine.train <- wine.all[1:3248, ]
@@ -48,8 +52,7 @@ wine.test <- wine.all[3249:6497, ]
 
 ###### model ######
 
-model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 150, A = T))
-#model.wine <- train(quality ~ ., data = wine.train, method = "J48", preProcess = c("scale"))
+model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 105, S = F))
 ###### evaluation ######
 
 prediction.wine <- predict(model.wine, wine.test)

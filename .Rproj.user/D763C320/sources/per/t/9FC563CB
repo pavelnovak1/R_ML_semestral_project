@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3106509460",
+    "hash" : "1763907268",
     "id" : "9FC563CB",
-    "lastKnownWriteTime" : 1558457917,
-    "last_content_update" : 1558457917273,
+    "lastKnownWriteTime" : 1558464072,
+    "last_content_update" : 1558464072226,
     "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/car_prediction.R",
     "project_path" : "car_prediction.R",
     "properties" : {
-        "cursorPosition" : "11,31",
+        "cursorPosition" : "19,12",
         "scrollLine" : "1",
         "tempName" : "Untitled1"
     },

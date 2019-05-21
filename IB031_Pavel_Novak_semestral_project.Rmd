@@ -1,8 +1,9 @@
 ---
-title: "IB031_Pavel_Novak_semestral_project"
+title: "Final"
 output:
   pdf_document: default
-  html_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -16,15 +17,27 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r cars}
-summary(cars)
+library(RWeka)
+library(caret)
+wine.all <- read.csv("winequalityN.csv")
+
+###### analysis ######
+
+head(wine.all)
+summary(wine.all)
+
+
+### baseline model ####
+wine.all$quality <- as.factor(wine.all$quality)
+wine.train <- wine.all[1:3248, ]
+wine.test <- wine.all[3249:6497, ]
+model.wine.raw <- J48(quality ~ ., data = wine.train)
+prediction.wine.raw <- predict(model.wine.raw, newdata = wine.test)
+references.wine.raw <- wine.test$quality
+
+confmat.wine.raw <- table(prediction.wine.raw, references.wine.raw)
+accuracy.wine.raw <- sum(diag(confmat.wine.raw)) / sum(confmat.wine.raw)
+accuracy.wine.raw
+
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

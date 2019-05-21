@@ -24,7 +24,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 \hypersetup{unicode=true,
-            pdftitle={IB031\_Pavel\_Novak\_semestral\_project},
+            pdftitle={Final},
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
@@ -113,7 +113,7 @@
 
 \setlength{\droptitle}{-2em}
 
-  \title{IB031\_Pavel\_Novak\_semestral\_project}
+  \title{Final}
     \pretitle{\vspace{\droptitle}\centering\huge}
   \posttitle{\par}
     \author{}
@@ -138,29 +138,121 @@ chunks within the document. You can embed an R code chunk like this:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{summary}\NormalTok{(cars)}
+\KeywordTok{library}\NormalTok{(RWeka)}
+\KeywordTok{library}\NormalTok{(caret)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00
+## Loading required package: lattice
 \end{verbatim}
 
-\hypertarget{including-plots}{%
-\subsection{Including Plots}\label{including-plots}}
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
 
-You can also embed plots, for example:
+\begin{verbatim}
+## Registered S3 methods overwritten by 'ggplot2':
+##   method         from 
+##   [.quosures     rlang
+##   c.quosures     rlang
+##   print.quosures rlang
+\end{verbatim}
 
-\includegraphics{IB031_Pavel_Novak_semestral_project_files/figure-latex/pressure-1.pdf}
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{wine.all <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"winequalityN.csv"}\NormalTok{)}
 
-Note that the \texttt{echo\ =\ FALSE} parameter was added to the code
-chunk to prevent printing of the R code that generated the plot.
+\CommentTok{###### analysis ######}
+
+\KeywordTok{head}\NormalTok{(wine.all)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    type fixed.acidity volatile.acidity citric.acid residual.sugar
+## 1 white           7.0             0.27        0.36           20.7
+## 2 white           6.3             0.30        0.34            1.6
+## 3 white           8.1             0.28        0.40            6.9
+## 4 white           7.2             0.23        0.32            8.5
+## 5 white           7.2             0.23        0.32            8.5
+## 6 white           8.1             0.28        0.40            6.9
+##   chlorides free.sulfur.dioxide total.sulfur.dioxide density   pH
+## 1     0.045                  45                  170  1.0010 3.00
+## 2     0.049                  14                  132  0.9940 3.30
+## 3     0.050                  30                   97  0.9951 3.26
+## 4     0.058                  47                  186  0.9956 3.19
+## 5     0.058                  47                  186  0.9956 3.19
+## 6     0.050                  30                   97  0.9951 3.26
+##   sulphates alcohol quality
+## 1      0.45     8.8       6
+## 2      0.49     9.5       6
+## 3      0.44    10.1       6
+## 4      0.40     9.9       6
+## 5      0.40     9.9       6
+## 6      0.44    10.1       6
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(wine.all)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##     type      fixed.acidity    volatile.acidity  citric.acid    
+##  red  :1599   Min.   : 3.800   Min.   :0.0800   Min.   :0.0000  
+##  white:4898   1st Qu.: 6.400   1st Qu.:0.2300   1st Qu.:0.2500  
+##               Median : 7.000   Median :0.2900   Median :0.3100  
+##               Mean   : 7.217   Mean   :0.3397   Mean   :0.3187  
+##               3rd Qu.: 7.700   3rd Qu.:0.4000   3rd Qu.:0.3900  
+##               Max.   :15.900   Max.   :1.5800   Max.   :1.6600  
+##               NA's   :10       NA's   :8        NA's   :3       
+##  residual.sugar     chlorides       free.sulfur.dioxide
+##  Min.   : 0.600   Min.   :0.00900   Min.   :  1.00     
+##  1st Qu.: 1.800   1st Qu.:0.03800   1st Qu.: 17.00     
+##  Median : 3.000   Median :0.04700   Median : 29.00     
+##  Mean   : 5.444   Mean   :0.05604   Mean   : 30.53     
+##  3rd Qu.: 8.100   3rd Qu.:0.06500   3rd Qu.: 41.00     
+##  Max.   :65.800   Max.   :0.61100   Max.   :289.00     
+##  NA's   :2        NA's   :2                            
+##  total.sulfur.dioxide    density             pH          sulphates     
+##  Min.   :  6.0        Min.   :0.9871   Min.   :2.720   Min.   :0.2200  
+##  1st Qu.: 77.0        1st Qu.:0.9923   1st Qu.:3.110   1st Qu.:0.4300  
+##  Median :118.0        Median :0.9949   Median :3.210   Median :0.5100  
+##  Mean   :115.7        Mean   :0.9947   Mean   :3.218   Mean   :0.5312  
+##  3rd Qu.:156.0        3rd Qu.:0.9970   3rd Qu.:3.320   3rd Qu.:0.6000  
+##  Max.   :440.0        Max.   :1.0390   Max.   :4.010   Max.   :2.0000  
+##                                        NA's   :9       NA's   :4       
+##     alcohol         quality     
+##  Min.   : 8.00   Min.   :3.000  
+##  1st Qu.: 9.50   1st Qu.:5.000  
+##  Median :10.30   Median :6.000  
+##  Mean   :10.49   Mean   :5.818  
+##  3rd Qu.:11.30   3rd Qu.:6.000  
+##  Max.   :14.90   Max.   :9.000  
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{### baseline model ####}
+\NormalTok{wine.all}\OperatorTok{$}\NormalTok{quality <-}\StringTok{ }\KeywordTok{as.factor}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{quality)}
+\NormalTok{wine.train <-}\StringTok{ }\NormalTok{wine.all[}\DecValTok{1}\OperatorTok{:}\DecValTok{3248}\NormalTok{, ]}
+\NormalTok{wine.test <-}\StringTok{ }\NormalTok{wine.all[}\DecValTok{3249}\OperatorTok{:}\DecValTok{6497}\NormalTok{, ]}
+\NormalTok{model.wine.raw <-}\StringTok{ }\KeywordTok{J48}\NormalTok{(quality }\OperatorTok{~}\StringTok{ }\NormalTok{., }\DataTypeTok{data =}\NormalTok{ wine.train)}
+\NormalTok{prediction.wine.raw <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.wine.raw, }\DataTypeTok{newdata =}\NormalTok{ wine.test)}
+\NormalTok{references.wine.raw <-}\StringTok{ }\NormalTok{wine.test}\OperatorTok{$}\NormalTok{quality}
+
+\NormalTok{confmat.wine.raw <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.wine.raw, references.wine.raw)}
+\NormalTok{accuracy.wine.raw <-}\StringTok{ }\KeywordTok{sum}\NormalTok{(}\KeywordTok{diag}\NormalTok{(confmat.wine.raw)) }\OperatorTok{/}\StringTok{ }\KeywordTok{sum}\NormalTok{(confmat.wine.raw)}
+\NormalTok{accuracy.wine.raw}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.3459526
+\end{verbatim}
 
 
 \end{document}

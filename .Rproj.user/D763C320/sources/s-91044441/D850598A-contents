@@ -1,5 +1,4 @@
 library(RWeka)
-library(caret)
 
 ###### loading data #######
 
@@ -51,7 +50,13 @@ wine.test <- wine.all[3249:6497, ]
 
 
 ###### model ######
+model.wine.raw <- J48(quality ~ ., data = wine.train)
+prediction.wine.raw <- predict(model.wine.raw, newdata = wine.test)
+references.wine.raw <- wine.test$quality
 
+confmat.wine.raw <- table(prediction.wine.raw, references.wine.raw)
+accuracy.wine.raw <- sum(diag(confmat.wine.raw)) / sum(confmat.wine.raw)
+accuracy.wine.raw
 model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 105, S = F))
 ###### evaluation ######
 

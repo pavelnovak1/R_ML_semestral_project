@@ -24,7 +24,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 \hypersetup{unicode=true,
-            pdftitle={Final},
+            pdftitle={IB031 - Project},
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
@@ -113,7 +113,7 @@
 
 \setlength{\droptitle}{-2em}
 
-  \title{Final}
+  \title{IB031 - Project}
     \pretitle{\vspace{\droptitle}\centering\huge}
   \posttitle{\par}
     \author{}
@@ -125,48 +125,30 @@
 \begin{document}
 \maketitle
 
-\hypertarget{r-markdown}{%
-\subsection{R Markdown}\label{r-markdown}}
+\hypertarget{popis-datasetu}{%
+\subsection{Popis datasetu}\label{popis-datasetu}}
 
-This is an R Markdown document. Markdown is a simple formatting syntax
-for authoring HTML, PDF, and MS Word documents. For more details on
-using R Markdown see \url{http://rmarkdown.rstudio.com}.
-
-When you click the \textbf{Knit} button a document will be generated
-that includes both content as well as the output of any embedded R code
-chunks within the document. You can embed an R code chunk like this:
+Dataset, který jsem si zvolil klasifikuje bílá a červená vína podle
+jejich kvality na základě atributů: kyselost, cukernatost, obsah síry,
+hustota, pH a obsah alkoholu. Dataset obsahuje celkem 6497 vín. \#\#
+Nahrání dat a knihoven
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(RWeka)}
-\KeywordTok{library}\NormalTok{(caret)}
+
+\NormalTok{wine.all <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"winequalityN.csv"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## Loading required package: lattice
-\end{verbatim}
+\hypertarget{exploracni-analyza}{%
+\subsection{Explorační analýza}\label{exploracni-analyza}}
 
-\begin{verbatim}
-## Loading required package: ggplot2
-\end{verbatim}
-
-\begin{verbatim}
-## Registered S3 methods overwritten by 'ggplot2':
-##   method         from 
-##   [.quosures     rlang
-##   c.quosures     rlang
-##   print.quosures rlang
-\end{verbatim}
+Dataset obsahuje celkem 6497 vín, z toho je 1599 červených a 4898
+bílých. 7 z 13 atributů obsahují nějaké chybějící hodnoty.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{###### loading data #######}
-
-\NormalTok{wine.all <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"winequalityN.csv"}\NormalTok{)}
-
-\CommentTok{###### analysis ######}
-
 \KeywordTok{head}\NormalTok{(wine.all)}
 \end{Highlighting}
 \end{Shaded}
@@ -193,6 +175,36 @@ chunks within the document. You can embed an R code chunk like this:
 ## 4      0.40     9.9       6
 ## 5      0.40     9.9       6
 ## 6      0.44    10.1       6
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{tail}\NormalTok{(wine.all)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      type fixed.acidity volatile.acidity citric.acid residual.sugar
+## 6492  red           6.8            0.620        0.08            1.9
+## 6493  red           6.2            0.600        0.08            2.0
+## 6494  red           5.9            0.550        0.10            2.2
+## 6495  red           6.3            0.510        0.13            2.3
+## 6496  red           5.9            0.645        0.12            2.0
+## 6497  red           6.0            0.310        0.47            3.6
+##      chlorides free.sulfur.dioxide total.sulfur.dioxide density   pH
+## 6492     0.068                  28                   38 0.99651 3.42
+## 6493     0.090                  32                   44 0.99490 3.45
+## 6494     0.062                  39                   51 0.99512 3.52
+## 6495     0.076                  29                   40 0.99574 3.42
+## 6496     0.075                  32                   44 0.99547 3.57
+## 6497     0.067                  18                   42 0.99549 3.39
+##      sulphates alcohol quality
+## 6492      0.82     9.5       6
+## 6493      0.58    10.5       5
+## 6494        NA    11.2       6
+## 6495      0.75    11.0       6
+## 6496      0.71    10.2       5
+## 6497      0.66    11.0       6
 \end{verbatim}
 
 \begin{Shaded}
@@ -236,108 +248,7 @@ chunks within the document. You can embed an R code chunk like this:
 ## 
 \end{verbatim}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{### baseline model ####}
-
-\NormalTok{wine.all}\OperatorTok{$}\NormalTok{quality <-}\StringTok{ }\KeywordTok{as.factor}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{quality)}
-\NormalTok{wine.train <-}\StringTok{ }\NormalTok{wine.all[}\DecValTok{1}\OperatorTok{:}\DecValTok{3248}\NormalTok{, ]}
-\NormalTok{wine.test <-}\StringTok{ }\NormalTok{wine.all[}\DecValTok{3249}\OperatorTok{:}\DecValTok{6497}\NormalTok{, ]}
-
-\CommentTok{### raw model without any preprocessing and tuning}
-\NormalTok{model.wine.raw <-}\StringTok{ }\KeywordTok{J48}\NormalTok{(quality }\OperatorTok{~}\StringTok{ }\NormalTok{., }\DataTypeTok{data =}\NormalTok{ wine.train)}
-\NormalTok{prediction.wine.raw <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.wine.raw, }\DataTypeTok{newdata =}\NormalTok{ wine.test)}
-\NormalTok{references.wine.raw <-}\StringTok{ }\NormalTok{wine.test}\OperatorTok{$}\NormalTok{quality}
-
-\NormalTok{confmat.wine.raw <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.wine.raw, references.wine.raw)}
-\NormalTok{accuracy.wine.raw <-}\StringTok{ }\KeywordTok{sum}\NormalTok{(}\KeywordTok{diag}\NormalTok{(confmat.wine.raw)) }\OperatorTok{/}\StringTok{ }\KeywordTok{sum}\NormalTok{(confmat.wine.raw)}
-\NormalTok{accuracy.wine.raw}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## [1] 0.3459526
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{##### preprocessing #####}
-
-\NormalTok{wine.all <-}\StringTok{ }\NormalTok{wine.all[}\KeywordTok{sample}\NormalTok{(}\KeywordTok{nrow}\NormalTok{(wine.all)), ] }\CommentTok{#data shufling}
-
-\CommentTok{## removing missing values}
-
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{fixed.acidity), }\StringTok{"fixed.acidity"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{fixed.acidity, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{volatile.acidity), }\StringTok{"volatile.acidity"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{volatile.acidity, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{citric.acid), }\StringTok{"citric.acid"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{citric.acid, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{residual.sugar), }\StringTok{"residual.sugar"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{residual.sugar, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{chlorides), }\StringTok{"chlorides"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{chlorides, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{pH), }\StringTok{"pH"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{pH, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-\NormalTok{wine.all[}\KeywordTok{is.na}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{sulphates), }\StringTok{"sulphates"}\NormalTok{] <-}\StringTok{ }\KeywordTok{mean}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{sulphates, }\DataTypeTok{na.rm =}\NormalTok{ T)}
-
-\CommentTok{## merging category no.3 to no.4 and no.9 to no.8}
-\NormalTok{wine.all[(wine.all}\OperatorTok{$}\NormalTok{quality }\OperatorTok{==}\StringTok{ }\DecValTok{3}\NormalTok{), }\StringTok{"quality"}\NormalTok{] <-}\StringTok{ }\DecValTok{4}
-\NormalTok{wine.all[(wine.all}\OperatorTok{$}\NormalTok{quality }\OperatorTok{==}\StringTok{ }\DecValTok{9}\NormalTok{), }\StringTok{"quality"}\NormalTok{] <-}\StringTok{ }\DecValTok{8}
-\NormalTok{wine.all}\OperatorTok{$}\NormalTok{quality <-}\StringTok{ }\KeywordTok{droplevels}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{quality, }\DataTypeTok{exclude =} \KeywordTok{c}\NormalTok{(}\DecValTok{3}\NormalTok{,}\DecValTok{9}\NormalTok{))}
-\NormalTok{wine.all}\OperatorTok{$}\NormalTok{quality <-}\StringTok{ }\KeywordTok{as.factor}\NormalTok{(wine.all}\OperatorTok{$}\NormalTok{quality)}
-
-\NormalTok{wine.train <-}\StringTok{ }\NormalTok{wine.all[}\DecValTok{1}\OperatorTok{:}\DecValTok{3248}\NormalTok{, ]}
-\NormalTok{wine.test <-}\StringTok{ }\NormalTok{wine.all[}\DecValTok{3249}\OperatorTok{:}\DecValTok{6497}\NormalTok{, ]}
-
-
-\CommentTok{###### model ######}
-
-\NormalTok{model.wine <-}\StringTok{ }\KeywordTok{J48}\NormalTok{(quality }\OperatorTok{~}\StringTok{ }\NormalTok{., }\DataTypeTok{data =}\NormalTok{ wine.train, }\DataTypeTok{control =} \KeywordTok{Weka_control}\NormalTok{(}\DataTypeTok{R =}\NormalTok{ F, }\DataTypeTok{M =} \DecValTok{105}\NormalTok{, }\DataTypeTok{S =}\NormalTok{ F))}
-\CommentTok{###### evaluation ######}
-
-\NormalTok{prediction.wine <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.wine, wine.test)}
-
-\NormalTok{references.wine <-}\StringTok{ }\NormalTok{wine.test}\OperatorTok{$}\NormalTok{quality}
-
-\NormalTok{confmat.wine <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.wine, references.wine)}
-\NormalTok{confmat.wine}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-##                references.wine
-## prediction.wine    4    5    6    7    8
-##               4    0    0    0    0    0
-##               5   55  590  312   20    1
-##               6   56  495 1039  427   65
-##               7    2    3   74   89   21
-##               8    0    0    0    0    0
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{accuracy.wine <-}\StringTok{ }\KeywordTok{sum}\NormalTok{(}\KeywordTok{diag}\NormalTok{(confmat.wine)) }\OperatorTok{/}\StringTok{ }\KeywordTok{sum}\NormalTok{(confmat.wine)}
-\NormalTok{accuracy.wine}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## [1] 0.5287781
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{### evaluation with toleration +- 1 class}
-\NormalTok{accuracy.wine}\FloatTok{.2}\NormalTok{ <-}\StringTok{ }\NormalTok{confmat.wine[}\DecValTok{1}\OperatorTok{:}\DecValTok{1}\NormalTok{] }\OperatorTok{+}\StringTok{ }\NormalTok{confmat.wine[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]}
-\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{2}\OperatorTok{:}\DecValTok{4}\NormalTok{)\{}
-  \ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in}\NormalTok{ (i}\DecValTok{-1}\NormalTok{)}\OperatorTok{:}\NormalTok{(i}\OperatorTok{+}\DecValTok{1}\NormalTok{))\{}
-\NormalTok{    accuracy.wine}\FloatTok{.2}\NormalTok{ <-}\StringTok{ }\NormalTok{accuracy.wine}\FloatTok{.2} \OperatorTok{+}\StringTok{ }\NormalTok{confmat.wine[i,j]}
-\NormalTok{  \}}
-\NormalTok{\}}
-\NormalTok{accuracy.wine}\FloatTok{.2}\NormalTok{ <-}\StringTok{ }\NormalTok{accuracy.wine}\FloatTok{.2} \OperatorTok{+}\StringTok{ }\NormalTok{confmat.wine[}\DecValTok{5}\NormalTok{,}\DecValTok{4}\NormalTok{] }\OperatorTok{+}\StringTok{ }\NormalTok{confmat.wine[}\DecValTok{5}\NormalTok{,}\DecValTok{5}\NormalTok{]}
-\NormalTok{accuracy.wine}\FloatTok{.2}\NormalTok{ <-}\StringTok{ }\NormalTok{accuracy.wine}\FloatTok{.2} \OperatorTok{/}\StringTok{ }\KeywordTok{sum}\NormalTok{(confmat.wine)}
-\NormalTok{accuracy.wine}\FloatTok{.2}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## [1] 0.9547553
-\end{verbatim}
+Zajímavé je rozložení hodnot atributu quality.
 
 
 \end{document}

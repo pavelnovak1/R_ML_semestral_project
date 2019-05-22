@@ -4,6 +4,7 @@ output:
   html_document:
     df_print: paged
   pdf_document: default
+  word_document: default
 ---
 
 ## Popis datasetu
@@ -121,5 +122,60 @@ accuracy.wine <- sum(diag(confmat.wine)) / sum(confmat.wine)
 accuracy.wine
 ```
 
-Bohužel model se nepodařilo natrénovat na více než něco kolem 54%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu a 
+Bohužel model se nepodařilo natrénovat na více než něco kolem 54%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 95%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
+
+```{r}
+
+### evaluation with toleration +- 1 class
+accuracy.wine.with.tolerance <- confmat.wine[1:1] + confmat.wine[1,2]
+for(i in 2:4){
+  for(j in (i-1):(i+1)){
+    accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine[i,j]
+  }
+}
+accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine[5,4] + confmat.wine[5,5]
+accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance / sum(confmat.wine)
+accuracy.wine.with.tolerance
+```
+
+Tento model se tedy při použití na tomto konkrétním datasetu příliš neosvědčil. Je to dáno pravděpodobně větším množstvím možných výsledných klasifikací mezi kterými nelze přesně rozhodnout na základě daných atributů. V ostatních použitých modelech dopadly výsledky lépe, byť ne o mnoho. V algoritmu Random Forest byla přesnost okolo 70% a při algoritmu ID3 se pohybovala kolem 65%.
+
+
+## Dataset mushrooms
+
+## Explorační analýza
+
+Tento dataset obsahuje 8124 položek a rozhoduje zda je houba jedovatá či nikoliv. Velikost množin jedovatých a jedlých hub je téměř stejná, žádné atributy neobsahují chybějící hodnoty. Z tohoto důvodu nebyla nutná prakticky žádná úprava ani žádné parametry modelu aby se dosáhlo přesnosti téměř 100%.
+
+```{r}
+####### loading data #######
+library(RWeka)
+mushrooms.all <- read.csv("mushrooms.csv")
+
+######## analysis ########
+
+head(mushrooms.all)
+summary(mushrooms.all)
+
+###### preprocessing ########
+
+mushrooms.all <- mushrooms.all[sample(nrow(mushrooms.all)), ]
+mushrooms.train <- mushrooms.all[1:4062, ]
+mushrooms.test <- mushrooms.all[4063:8124, ]
+
+
+##### model #####
+model.mushrooms <- J48(class ~ ., mushrooms.train, control = Weka_control(R = T))
+
+prediction.mushrooms <- predict(model.mushrooms, mushrooms.test)
+
+references.mushrooms <- mushrooms.test$class
+
+confmat.mushrooms <- table(prediction.mushrooms, references.mushrooms)
+confmat.mushrooms
+
+accuracy.mushrooms <- sum(diag(confmat.mushrooms)) / sum(confmat.mushrooms)
+accuracy.mushrooms
+```
+
 

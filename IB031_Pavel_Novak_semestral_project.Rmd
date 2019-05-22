@@ -8,7 +8,8 @@ output:
 
 ## Popis datasetu
 Dataset, který jsem si zvolil klasifikuje bílá a červená vína podle jejich kvality na základě atributů: kyselost, cukernatost, obsah síry, hustota, pH a obsah alkoholu.
-Dataset obsahuje celkem 6497 vín. 
+Dataset obsahuje celkem 6497 vín.
+
 ## Nahrání dat a knihoven
 
 ```{r data.wine}
@@ -28,7 +29,7 @@ tail(wine.all)
 summary(wine.all)
 ```
 
-Zajímavé je rozložení hodnot atributu quality, která připomíná graf normálního rozložení. 
+Zajímavé je rozložení hodnot atributu quality - připomíná graf normálního rozložení. 
 
 ```{r}
 wine.all$quality <- as.factor(wine.all$quality)
@@ -55,8 +56,8 @@ Jako první jsem se pokusil natrénovat model bez jakéhokoliv předzpracování
 
 ```{r}
 wine.all$quality <- as.factor(wine.all$quality)
-wine.train <- wine.all[1:3248, ]
-wine.test <- wine.all[3249:6497, ]
+wine.train <- wine.all[1:((nrow(wine.all)) * 0.7), ]
+wine.test <- wine.all[(nrow(wine.all)*0.7):nrow(wine.all), ]
 
 ### raw model without any preprocessing and tuning
 model.wine.raw <- J48(quality ~ ., data = wine.train)
@@ -69,7 +70,7 @@ accuracy.wine.raw
 ```
 ## Předzpracování
 
-Je nutné změnit cílovou třídu na factor. Dále je třeba se vypořádat s chybějícími hodnotami, vzhledem k tomu, že všechny atributy kde se chybějící hodnoty nacházejí jsou číselné, rozhodl jsem se k nahrazení chybějících hodnot hodnotou průměrnou. Dále jsem všechny vína z kategorií kvality 3 a 9 přesunul do kategorií 4 resp. 8, jelikož těchto vín bylo velmi málo a negativně tyto položky ovlivňovaly přesnost modelu. Jako poslední jsem data náhodně promíchal a rozdělil na poloviny na trénovací a testovací množinu.
+Bylo nutné změnit cílovou třídu na factor. Dále je třeba se vypořádat s chybějícími hodnotami, vzhledem k tomu, že všechny atributy kde se chybějící hodnoty nacházejí jsou číselné, rozhodl jsem se k nahrazení chybějících hodnot hodnotou průměrnou. Dále jsem všechny vína z kategorií kvality 3 a 9 přesunul do kategorií 4 resp. 8, jelikož těchto vín bylo velmi málo a tyto položky negativně ovlivňovaly přesnost modelu. Jako poslední jsem data náhodně promíchal a rozdělil na trénovací a testovací množinu v poměru 7 ku 3.
 
 ```{r}
 
@@ -102,42 +103,86 @@ wine.test <- wine.all[(nrow(wine.all)*0.7):nrow(wine.all), ]
 Na natrénování tohoto modelu jsem použil algoritmus C4.5, v jazyce R implementovaný v knihovně RWeka a také v knihovně caret. Já použil implementaci z knihovny RWeka, kde je tento algoritmus implementovaný funkcí "J48". Algoritmus C4.5 vychází ze staršího algoritmu ID3, a tento algoritmus dále rozšiřuje. Používá se ke klasifikaci a tvorbě rozhodovacích klasifikačních stromů. 
 Princip jeho funkce je následující:
 Spočte informační zisk jednotlivých atributů tak, aby co nejlépe rozdělovali danou množinu. Tento atribut se poté umístí do daného uzlu, který rozhoduje podle atributu s největším informačním ziskem a rekurzivně se pokračuje na podmnožinách daných rozdělením na předchozím uzlu.
+
+## Modely s různými parametry
+
+## Model 1
 ```{r}
-model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 1))
-prediction.wine <- predict(model.wine, wine.test)
+model.wine.1 <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 1))
+prediction.wine.1 <- predict(model.wine.1, wine.test)
 ```
 
-## Vyhodnocení modelu
+## Vyhodnocení modelu 1
 
 ```{r}
 
 references.wine <- wine.test$quality
 
-confmat.wine <- table(prediction.wine, references.wine)
-confmat.wine
+confmat.wine.1 <- table(prediction.wine.1, references.wine)
+confmat.wine.1
 
 
-accuracy.wine <- sum(diag(confmat.wine)) / sum(confmat.wine)
-accuracy.wine
+accuracy.wine.1 <- sum(diag(confmat.wine.1)) / sum(confmat.wine.1)
+accuracy.wine.1
 ```
 
-Bohužel model se nepodařilo natrénovat na více než něco kolem 58%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 93%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
+
+## Model 2
+```{r}
+model.wine.2 <- J48(quality ~ ., data = wine.train, control = Weka_control(R = T, M = 50, A = T))
+prediction.wine.2 <- predict(model.wine.2, wine.test)
+```
+
+## Vyhodnocení modelu 2
 
 ```{r}
 
-### evaluation with toleration +- 1 class
-accuracy.wine.with.tolerance <- confmat.wine[1:1] + confmat.wine[1,2]
+confmat.wine.2 <- table(prediction.wine.2, references.wine)
+confmat.wine.2
+
+
+accuracy.wine.2 <- sum(diag(confmat.wine.2)) / sum(confmat.wine.2)
+accuracy.wine.2
+```
+
+## Model 3
+```{r}
+model.wine.3 <- J48(quality ~ ., data = wine.train, control = Weka_control(M = 200))
+prediction.wine.3 <- predict(model.wine.3, wine.test)
+```
+
+## Vyhodnocení modelu 3
+
+```{r}
+
+confmat.wine.3 <- table(prediction.wine.3, references.wine)
+confmat.wine.3
+
+
+accuracy.wine.3 <- sum(diag(confmat.wine.3)) / sum(confmat.wine.3)
+accuracy.wine.3
+```
+
+## Vyhodnocení modelu 
+Výrazně nejlepší je konfigurace parametrů v případě č.1 kdy dosahuje přesnost něco kolem 58% což je výrazně více než zbylé dva a rovněž než základní testovací model, který dosáhl přesnosti cca. 33%.
+Bohužel model se nepodařilo natrénovat na více než 58%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 93%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
+
+```{r}
+plot(model.wine.1)
+# evaluation with toleration +- 1 class
+accuracy.wine.with.tolerance <- confmat.wine.1[1:1] + confmat.wine.1[1,2]
 for(i in 2:4){
   for(j in (i-1):(i+1)){
-    accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine[i,j]
+    accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine.1[i,j]
   }
 }
-accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine[5,4] + confmat.wine[5,5]
-accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance / sum(confmat.wine)
+accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine.1[5,4] + confmat.wine.1[5,5]
+accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance / sum(confmat.wine.1)
 accuracy.wine.with.tolerance
 ```
 
-Tento model se tedy při použití na tomto konkrétním datasetu příliš neosvědčil. Je to dáno pravděpodobně větším množstvím možných výsledných klasifikací mezi kterými nelze přesně rozhodnout na základě daných atributů. V ostatních použitých modelech dopadly výsledky lépe, byť ne o mnoho. V algoritmu Random Forest byla přesnost okolo 70% a při algoritmu ID3 se pohybovala kolem 65%.
+## Závěr
+Tento model se při použití na tomto konkrétním datasetu příliš neosvědčil. Je to dáno pravděpodobně větším množstvím možných výsledných klasifikací mezi kterými nelze přesně rozhodnout na základě daných atributů. V ostatních použitých modelech dopadly výsledky lépe, byť ne o mnoho. V algoritmu Random Forest byla přesnost okolo 70% a při algoritmu ID3 se pohybovala kolem 65%.
 
 ## Dataset mushrooms
 
@@ -154,10 +199,11 @@ head(mushrooms.all)
 summary(mushrooms.all)
 ###### preprocessing ########
 mushrooms.all <- mushrooms.all[sample(nrow(mushrooms.all)), ]
-mushrooms.train <- mushrooms.all[1:4062, ]
-mushrooms.test <- mushrooms.all[4063:8124, ]
+mushrooms.train <- mushrooms.all[1:(nrow(mushrooms.all)*0.7), ]
+mushrooms.test <- mushrooms.all[(nrow(mushrooms.all)*0.7):nrow(mushrooms.all), ]
 ##### model #####
 model.mushrooms <- J48(class ~ ., mushrooms.train, control = Weka_control(R = T))
+plot(model.mushrooms)
 prediction.mushrooms <- predict(model.mushrooms, mushrooms.test)
 references.mushrooms <- mushrooms.test$class
 confmat.mushrooms <- table(prediction.mushrooms, references.mushrooms)
@@ -166,9 +212,14 @@ accuracy.mushrooms <- sum(diag(confmat.mushrooms)) / sum(confmat.mushrooms)
 accuracy.mushrooms
 ```
 
+## Závěr
+
+Tento model se na konkrétní dataset hodí velmi pěkně a téměř se 100% přesností klasifikuje jednotlivé houby do správných kategorií. Je to dle mého názoru dané především tím, že tento dataset je primárně určen přesně na tyto typy úloh. Při sbírání hub bych se na něj však pravděpodobně nespoléhal. :)
+
 
 ## Dataset cars
 
+Tento dataset hodnotí vozy podle jednotlivých kritérií jako nevyhovující, vyhovující, dobré a velmi dobré.
 
 ```{r}
 ######## loading data #######
@@ -179,7 +230,7 @@ head(cars.all)
 summary(cars.all)
 ```
 
-
+Preprocesing a trénování modelu
 ```{r}
 cars.all <- cars.all[sample(nrow(cars.all)), ]
 cars.train <- cars.all[1:(nrow(cars.all)*0.7), ]
@@ -195,3 +246,9 @@ confmat
 accuracy.cars <- sum(diag(confmat)) / sum(confmat)
 accuracy.cars
 ```
+
+Výsledná hodnota se pohybuje kolem 89%. 
+
+## Závěr
+
+Algorytmus J48 se velmi osvědčil při tvorbě modelu nad datasetem mushrooms, kde dosahoval 100% úspěšnosti. Na datasetu cars se maximální úspěšnost pohybovala lehce pod 90% což je dle mého názoru také dobrý výsledek. Nejhorší úspěšnost model vykazoval nad datasetem wine, kde nepřesnost byla způsobena pravděpodobně velmi jemným členěním na výsledné kategorie.

@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1558542470322.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4086605225",
+    "id" : "954E87CB",
+    "lastKnownWriteTime" : 1558550397,
+    "last_content_update" : 1558550397458,
+    "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/IB031_Pavel_Novak_semestral_project.Rmd",
+    "project_path" : "IB031_Pavel_Novak_semestral_project.Rmd",
+    "properties" : {
+        "cursorPosition" : "252,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

@@ -39,14 +39,20 @@ wine.all[is.na(wine.all$chlorides), "chlorides"] <- mean(wine.all$chlorides, na.
 wine.all[is.na(wine.all$pH), "pH"] <- mean(wine.all$pH, na.rm = T)
 wine.all[is.na(wine.all$sulphates), "sulphates"] <- mean(wine.all$sulphates, na.rm = T)
 
+
+
 ## merging category no.3 to no.4 and no.9 to no.8
 wine.all[(wine.all$quality == 3), "quality"] <- 4
 wine.all[(wine.all$quality == 9), "quality"] <- 8
 wine.all$quality <- droplevels(wine.all$quality, exclude = c(3,9))
 wine.all$quality <- as.factor(wine.all$quality)
 
-wine.train <- wine.all[1:3248, ]
-wine.test <- wine.all[3249:6497, ]
+
+##data shufling
+wine.all <- wine.all[sample(nrow(wine.all)), ] 
+
+wine.train <- wine.all[1:((nrow(wine.all)) * 0.7), ]
+wine.test <- wine.all[(nrow(wine.all)*0.7):nrow(wine.all), ]
 
 
 ###### model ######
@@ -57,7 +63,7 @@ references.wine.raw <- wine.test$quality
 confmat.wine.raw <- table(prediction.wine.raw, references.wine.raw)
 accuracy.wine.raw <- sum(diag(confmat.wine.raw)) / sum(confmat.wine.raw)
 accuracy.wine.raw
-model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 105, S = F))
+model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 1, S = T))
 ###### evaluation ######
 
 prediction.wine <- predict(model.wine, wine.test)

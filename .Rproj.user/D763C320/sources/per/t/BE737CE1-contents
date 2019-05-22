@@ -26,3 +26,4 @@ confmat.mushrooms
 
 accuracy.mushrooms <- sum(diag(confmat.mushrooms)) / sum(confmat.mushrooms)
 accuracy.mushrooms
+

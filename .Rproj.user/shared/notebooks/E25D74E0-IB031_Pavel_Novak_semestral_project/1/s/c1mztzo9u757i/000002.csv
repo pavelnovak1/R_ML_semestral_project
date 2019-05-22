@@ -1,0 +1,7 @@
+"0","####### loading data #######"
+"0","library(RWeka)"
+"0","mushrooms.all <- read.csv(""mushrooms.csv"")"
+"0",""
+"0","######## analysis ########"
+"0",""
+"0","head(mushrooms.all)"

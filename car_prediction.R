@@ -9,10 +9,10 @@ names(cars.all) <- c("buying", "maint", "doors", "persons", "lug_boot", "safety"
 head(cars.all)
 summary(cars.all)
 
-cars.train <- cars.all[1:863, ]
-cars.test <- cars.all[864:1727, ]
-model.cars <- J48(class ~ ., cars.train, control = Weka_control(R = F, M =70, A = F))
-
+cars.all <- cars.all[sample(nrow(cars.all)), ]
+cars.train <- cars.all[1:(nrow(cars.all)*0.7), ]
+cars.test <- cars.all[(nrow(cars.all)*0.7):nrow(cars.all), ]
+model.cars <- J48(class ~ ., cars.train, control = Weka_control(R = T, M = 1))
 prediction.cars <- predict(model.cars, cars.test)
 references.cars <- cars.test$class
 

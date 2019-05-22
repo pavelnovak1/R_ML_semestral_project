@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "164816260",
+    "hash" : "3563868417",
     "id" : "BE737CE1",
-    "lastKnownWriteTime" : 1558526776,
-    "last_content_update" : 1558526776195,
+    "lastKnownWriteTime" : 1558532603,
+    "last_content_update" : 1558532603405,
     "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/mushrooms_prediction.R",
     "project_path" : "mushrooms_prediction.R",
     "properties" : {
-        "cursorPosition" : "27,18",
+        "cursorPosition" : "29,0",
         "scrollLine" : "0",
         "tempName" : "Untitled1"
     },

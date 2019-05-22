@@ -1,10 +1,9 @@
 ---
 title: "IB031 - Project"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
-  word_document: default
 ---
 
 ## Popis datasetu
@@ -94,8 +93,8 @@ wine.all$quality <- as.factor(wine.all$quality)
 ##data shufling
 wine.all <- wine.all[sample(nrow(wine.all)), ] 
 
-wine.train <- wine.all[1:3248, ]
-wine.test <- wine.all[3249:6497, ]
+wine.train <- wine.all[1:((nrow(wine.all)) * 0.7), ]
+wine.test <- wine.all[(nrow(wine.all)*0.7):nrow(wine.all), ]
 ```
 
 ## Model C4.5
@@ -104,7 +103,7 @@ Na natrénování tohoto modelu jsem použil algoritmus C4.5, v jazyce R impleme
 Princip jeho funkce je následující:
 Spočte informační zisk jednotlivých atributů tak, aby co nejlépe rozdělovali danou množinu. Tento atribut se poté umístí do daného uzlu, který rozhoduje podle atributu s největším informačním ziskem a rekurzivně se pokračuje na podmnožinách daných rozdělením na předchozím uzlu.
 ```{r}
-model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 105))
+model.wine <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 1))
 prediction.wine <- predict(model.wine, wine.test)
 ```
 
@@ -122,7 +121,7 @@ accuracy.wine <- sum(diag(confmat.wine)) / sum(confmat.wine)
 accuracy.wine
 ```
 
-Bohužel model se nepodařilo natrénovat na více než něco kolem 54%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 95%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
+Bohužel model se nepodařilo natrénovat na více než něco kolem 58%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 93%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
 
 ```{r}
 
@@ -140,7 +139,6 @@ accuracy.wine.with.tolerance
 
 Tento model se tedy při použití na tomto konkrétním datasetu příliš neosvědčil. Je to dáno pravděpodobně větším množstvím možných výsledných klasifikací mezi kterými nelze přesně rozhodnout na základě daných atributů. V ostatních použitých modelech dopadly výsledky lépe, byť ne o mnoho. V algoritmu Random Forest byla přesnost okolo 70% a při algoritmu ID3 se pohybovala kolem 65%.
 
-
 ## Dataset mushrooms
 
 ## Explorační analýza
@@ -151,31 +149,49 @@ Tento dataset obsahuje 8124 položek a rozhoduje zda je houba jedovatá či niko
 ####### loading data #######
 library(RWeka)
 mushrooms.all <- read.csv("mushrooms.csv")
-
 ######## analysis ########
-
 head(mushrooms.all)
 summary(mushrooms.all)
-
 ###### preprocessing ########
-
 mushrooms.all <- mushrooms.all[sample(nrow(mushrooms.all)), ]
 mushrooms.train <- mushrooms.all[1:4062, ]
 mushrooms.test <- mushrooms.all[4063:8124, ]
-
-
 ##### model #####
 model.mushrooms <- J48(class ~ ., mushrooms.train, control = Weka_control(R = T))
-
 prediction.mushrooms <- predict(model.mushrooms, mushrooms.test)
-
 references.mushrooms <- mushrooms.test$class
-
 confmat.mushrooms <- table(prediction.mushrooms, references.mushrooms)
 confmat.mushrooms
-
 accuracy.mushrooms <- sum(diag(confmat.mushrooms)) / sum(confmat.mushrooms)
 accuracy.mushrooms
 ```
 
 
+## Dataset cars
+
+
+```{r}
+######## loading data #######
+library(RWeka)
+cars.all <- read.csv("car.data")
+names(cars.all) <- c("buying", "maint", "doors", "persons", "lug_boot", "safety", "class")
+head(cars.all)
+summary(cars.all)
+```
+
+
+```{r}
+cars.all <- cars.all[sample(nrow(cars.all)), ]
+cars.train <- cars.all[1:(nrow(cars.all)*0.7), ]
+cars.test <- cars.all[(nrow(cars.all)*0.7):nrow(cars.all), ]
+model.cars <- J48(class ~ ., cars.train, control = Weka_control(R = T, M = 1))
+prediction.cars <- predict(model.cars, cars.test)
+references.cars <- cars.test$class
+confmat <- table(prediction.cars, references.cars)
+confmat
+```
+
+```{r}
+accuracy.cars <- sum(diag(confmat)) / sum(confmat)
+accuracy.cars
+```

@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1558615630642.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3199342637",
+    "id" : "A4A5EE1C",
+    "lastKnownWriteTime" : 1558615743,
+    "last_content_update" : 1558615743179,
+    "path" : "~/Škola/Projects/R_projects/R_ML_semestral_project/Projekt_final.Rmd",
+    "project_path" : "Projekt_final.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "863,15",
+        "scrollLine" : "844",
+        "tempName" : "Untitled2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

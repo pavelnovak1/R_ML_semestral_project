@@ -168,7 +168,7 @@ Výrazně nejlepší je konfigurace parametrů v případě č.1 kdy dosahuje p�
 Bohužel model se nepodařilo natrénovat na více než 58%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 93%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
 
 ```{r}
-plot(model.wine.1)
+
 # evaluation with toleration +- 1 class
 accuracy.wine.with.tolerance <- confmat.wine.1[1:1] + confmat.wine.1[1,2]
 for(i in 2:4){
@@ -203,7 +203,6 @@ mushrooms.train <- mushrooms.all[1:(nrow(mushrooms.all)*0.7), ]
 mushrooms.test <- mushrooms.all[(nrow(mushrooms.all)*0.7):nrow(mushrooms.all), ]
 ##### model #####
 model.mushrooms <- J48(class ~ ., mushrooms.train, control = Weka_control(R = T))
-plot(model.mushrooms)
 prediction.mushrooms <- predict(model.mushrooms, mushrooms.test)
 references.mushrooms <- mushrooms.test$class
 confmat.mushrooms <- table(prediction.mushrooms, references.mushrooms)
@@ -251,4 +250,14 @@ Výsledná hodnota se pohybuje kolem 89%.
 
 ## Závěr
 
-Algorytmus J48 se velmi osvědčil při tvorbě modelu nad datasetem mushrooms, kde dosahoval 100% úspěšnosti. Na datasetu cars se maximální úspěšnost pohybovala lehce pod 90% což je dle mého názoru také dobrý výsledek. Nejhorší úspěšnost model vykazoval nad datasetem wine, kde nepřesnost byla způsobena pravděpodobně velmi jemným členěním na výsledné kategorie.
+Algoritmus J48 se velmi osvědčil při tvorbě modelu nad datasetem mushrooms, kde dosahoval 100% úspěšnosti. Na datasetu cars se maximální úspěšnost pohybovala lehce pod 90% což je dle mého názoru také dobrý výsledek. Nejhorší úspěšnost model vykazoval nad datasetem wine, zde se dosahovalo přesnosti kolem 58%, nepřesnost ale  byla způsobena pravděpodobně velmi jemným členěním na výsledné kategorie, neboť pokud se vzala v úvahu tolerance tak úspěšnost již velmi výrazně převyšovala 90%.
+
+
+## Souhrn
+Úspěšnost modelů se na tomto datasetu dost značně lišila. Ze tří algoritmů byly výsledky následující: 
+ID3 : ~ 65%
+C4.5: ~ 58%
+Random Forest: ~ 70%
+
+Pro tento dataset se tedy zjevně modely C4.5 a ID3 hodí nejméně. Je ale nutné poznamenat, že v drtivé většině se model pletl jen o jednu skupinu, což vzhledem k tomu, že skupin bylo velmi mnoho, byť byly redukovány dvě okrajové skupiny, je přijatelné. Členění bylo velmi jemné a z tohoto důvodu nebyl model schopen korektně zařadit vína do té správné skupiny. Byl dobře schopen od sebe odlišit vína vyšší a nižší kvality. Pokud jsme tedy tolerovali nepřesnost +- 1 skupina, úspěšnost již dosahovala cca 93%, což je velmi slušný výsledek. Výsledky by se tedy daly výrazně zlepšit např. sloučením několika skupin do 1, nebo čistě vína rozdělit pouze na dobrá a špatná podle toho, do jaké skupiny patří. (např. skupina 3 - 5 = nízká kvalita, 6 - 8 = vysoká kvalita).
+

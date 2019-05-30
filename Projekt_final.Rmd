@@ -1,0 +1,871 @@
+---
+title: "Projekt IB031"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+# Renča
+## Výběr datasetu
+
+Dataset obsahuje 8 124 instancí popisujících různé vlastnosti hub, ze kterých můžeme vyvodit jejich jedovatost. Vznikl v roce 1987.
+
+### Atributy
+
+22 výčtových atributů, 2 možnosti klasifikace (edible = jedlé, poisonous = jedovaté)
+
+* cap.shape = tvar kloboučku
+* cap.surface = povrch kloboučku
+* cap.color = barva kloboučku
+* bruises = zda-li houba na spodní části kloboučka modrá
+* odor = vůně
+* gill.attachment = uchycení lupenů 
+* gill.spacing = velikost mezer mezi lupeny
+* gill.size = velikost lupenů
+* gill.color = barva lupenů
+* stalk.shape = tvar nožičky
+* stalk.root = typ kořene
+* stalk.surface.above.ring = povrch nožičky nad prstencem
+* stalk.surface.below.ring = povrch nožičky pod prstencem
+* stalk.color.above.ring = barva nožičky nad prstencem
+* stalk.color.below.ring = barva nožičky pod prstencem
+* veil.type = typ závoje
+* veil.color = barva závoje
+* ring.number = počet prstenců
+* ring.type = typ prstence
+* spore.print.color = barva otisku výtrusů
+* population = populace
+* habitat = výskyt
+
+## Explorační analýza
+
+### Načtení datasetu
+```{r}
+# Načtení datasetu 
+mushroom_dataset <- read.csv("mushrooms.csv")
+```
+### Přehled dat
+
+#### Náhled dat
+```{r}
+head(mushroom_dataset)
+```
+
+#### Shrnutí a statistiky
+```{r}
+summary(mushroom_dataset)
+```
+Hodnoty všech atributů jsou rozděleny poměrně náhodně, což může svědčit o přirozenosti datasetu. Některé atributy obsahují hodnotu (Other), avšak jejich velikost se většinou řadí k těm menším hodnotám. Dvě výsledné kategorie jsou zastoupeny rovnoměrně a to v poměru 52:48.
+
+#### Vztahy atribut - třída
+Tabulky ukazují absolutní zastoupení jednotlivých hodnot atributů v jednotlivých klasifikačních třídách.
+
+##### Tvar, povrch a barva kloboučku
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$cap.shape)
+table(mushroom_dataset$class, mushroom_dataset$cap.surface)
+table(mushroom_dataset$class, mushroom_dataset$cap.color)
+```
+##### Modrání
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$bruises)
+```
+##### Vůně
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$odor)
+```
+##### Uchycení, velikost mezer mezi lupeny, velikost a barva lupenů
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$gill.attachment)
+table(mushroom_dataset$class, mushroom_dataset$gill.spacing)
+table(mushroom_dataset$class, mushroom_dataset$gill.size)
+table(mushroom_dataset$class, mushroom_dataset$gill.color)
+```
+##### Tvar nožičky
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$stalk.shape)
+```
+##### Typ kořenů
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$stalk.root)
+```
+##### Povrch nožičky nad a pod prstencem
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$stalk.surface.above.ring)
+table(mushroom_dataset$class, mushroom_dataset$stalk.surface.below.ring)
+```
+##### Barva nožičky nad a pod prstencem
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$stalk.color.above.ring)
+table(mushroom_dataset$class, mushroom_dataset$stalk.color.below.ring)
+```
+##### Typ a barva závoje
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$veil.type)
+table(mushroom_dataset$class, mushroom_dataset$veil.color)
+```
+##### Počet a typ prstenců
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$ring.number)
+table(mushroom_dataset$class, mushroom_dataset$ring.type)
+```
+##### Barva otisku výtrusů
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$spore.print.color)
+```
+##### Populace
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$population)
+```
+##### Výskyt
+```{r}
+table(mushroom_dataset$class, mushroom_dataset$habitat)
+```
+Několik zajímavých pozorování:
+* Všechny houby stejné vůně patří do jedné kategorie až na houby bez vůně (hodnota 'n').
+* Všechny houby, které nemají prstenec, jsou jedovaté.
+* Houby, jejichž kloboučky mají barvy, které člověku připadají jedlé, jsou většinou jedovaté a naopak. Např. všechny houby se zelenými a fialovými kloboučky jsou jedlé.
+* Všechny houby mají typ závoje 'p' - částečný. 
+
+## Předzpracování
+
+### Faktorizace hodnot
+Faktorizaci provádět nemusíme. Všechny hodnoty atributů spadají do určitého rozsahu hodnot (tzn. jsou to kategorické proměnné), a proto byly při nahrání automaticky faktorizovány.
+
+### Chybějící hodnoty
+```{r}
+any(is.na(mushroom_dataset))
+```
+Výsledkem je FALSE, což znamená, že v datasetu nejsou žádné chybějící hodnoty.
+
+### Odstranění zbytečného atributu
+Jak už bylo výše zmíněno, všechny příklady v atributu "veil.type" nabývají stejné hodnoty. Takový atribut nemá v našem případě žádný smysl, proto je třeba jej smazat.
+```{r}
+mushroom_dataset <- mushroom_dataset[, -17]
+```
+
+### Rozdělení dat na trénovací a testovací
+```{r}
+ind <- sample(2, nrow(mushroom_dataset), prob = c(0.7, 0.3), replace = TRUE)
+training_data <- mushroom_dataset[ind==1, ]
+test_data <- mushroom_dataset[ind==2, ]
+```
+
+## Výběr modelu/algoritmu
+Nejznámějším algoritmem pro strojové učení rozhodovacích stromů je Iterative Dichotomiser 3 (zkr. ID3). Bude zajímavé porovnat výsledky tohoto algoritmu, který se dnes používá čistě k výukovým účelům, s algortimy běžně užívanými v praxi.
+
+### Popis algoritmu
+Algoritmus začíná s počáteční množinou dat S jako s kořenovým uzlem. Při každé iteraci vypočítá entropii H(S) (nebo z něj odvozený informační zisk) pro všechny atributy z S. Poté vybere atribut s nejmenší entropií a podle tohoto atributu rozdělí množinu S do podmnožin. Tzn. že do stromu přidá uzel označující tento atribut, jehož potomci značí nově vzniklé podmnožiny. Při další iteraci se tento atribut do výpočtu H(S) již nezapočítává. 
+Růst větve může skončit v těchto případech:
+* všechny prvky podmnožiny spadají do stejné kategorie a list je označkován danou kategorií
+* pokud nejsou již žádné další volné atributy, ale prvky nejsou označkovány stejně, uzel je označkován kategorií většiny
+* v podmnožině nejsou žádné prvky, pak je tento uzel označkován kategorií, kterou má většina prvků z rodičovského uzlu
+
+### Nevýhody
+Strom vyprodukovaný ID3 nemusí být optimálním řešením, kvůli jeho strategii při vybírání atributu, podle kterého se bude dělit na podmnožiny. Díky ní může dokonvergovat do lokálního optima. To se dá řešit tzv. "backtrackingem".
+Sám o sobě je algoritmus náchylný k přeučení dat, což se řeší v algoritmu C4.5 prunningem. ID3 nevytváří vždy nejmenší možné stromy.
+
+## Trénování modelů
+### Dataset mushrooms
+Pro natrénování modelu použiji RWeka knihovnu. 
+```{r}
+library(RWeka)
+WPM("refresh-cache")
+WPM("install-package", "simpleEducationalLearningSchemes")
+ID3 <- make_Weka_classifier("weka/classifiers/trees/Id3")
+ID3_model <- ID3(class ~ ., data = training_data)
+ID3_prediction <- predict(ID3_model, test_data)
+```
+
+### Dataset cars
+#### Načtení datasetu
+```{r}
+#Stažení datasetu z archivu
+cars_dataset <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/car/car.data")
+#Pojmenování sloupců
+colnames(cars_dataset) <- c("buying", "maint", "doors", "persons", "lug_boot", "safety", "acceptability")
+```
+
+#### Rozdělení dat na trénovací a testovací
+```{r}
+cars_ind <- sample(2, nrow(cars_dataset), prob = c(0.7, 0.3), replace = TRUE)
+cars_training_data <- cars_dataset[cars_ind==1, ]
+cars_test_data <- cars_dataset[cars_ind==2, ]
+```
+
+#### Natrénování modelu
+```{r}
+ID3_model_cars <- ID3(acceptability ~ ., data = cars_training_data)
+ID3_prediction_cars <- predict(ID3_model_cars, cars_test_data)
+```
+
+### Dataset wine
+#### Načtení datasetu a preprocessing
+```{r}
+wine_dataset <- read.csv("winequalityN.csv")
+
+# převod číslicových hodnot atributu quality na slova, aby nedošlo k regresi
+wine_dataset$quality <- unclass(wine_dataset$quality)
+wine_dataset$quality[wine_dataset$quality == 1] <- "one"
+wine_dataset$quality[wine_dataset$quality == 2] <- "two"
+wine_dataset$quality[wine_dataset$quality == 3] <- "three"
+wine_dataset$quality[wine_dataset$quality == 4] <- "four"
+wine_dataset$quality[wine_dataset$quality == 5] <- "five"
+wine_dataset$quality[wine_dataset$quality == 6] <- "six"
+wine_dataset$quality[wine_dataset$quality == 7] <- "seven"
+wine_dataset$quality[wine_dataset$quality == 8] <- "eight"
+wine_dataset$quality[wine_dataset$quality == 9] <- "nine"
+wine_dataset$quality <- factor(wine_dataset$quality)
+
+# chybějící hodnoty
+library(mice)
+wine_dataset <- complete(mice(wine_dataset))
+
+# diskretizace číselných hodnot
+wine_dataset <- Discretize(wine_dataset)
+```
+#### Rozdělení dat na trénovací a testovací
+```{r}
+wine_ind <- sample(2, nrow(wine_dataset), prob = c(0.7, 0.3), replace = TRUE)
+wine_training_data <- wine_dataset[wine_ind==1, ]
+wine_test_data <- wine_dataset[wine_ind==2, ]
+```
+
+#### Natrénování modelu
+```{r}
+ID3_model_wine <- ID3(quality ~ ., data = wine_training_data)
+ID3_prediction_wine <- predict(ID3_model_wine, wine_test_data)
+```
+
+## Vyhodnocení modelů
+### Dataset mushrooms
+```{r}
+library(caret)
+library(e1071)
+confusionMatrix(ID3_prediction, test_data$class)
+```
+#### Závěr
+Vzhledem k tomu, že tento dataset vznikl zhruba před 30 lety a je uměle vytvořený, bylo očekávatelné, že i v aplikaci algoritmu ID3 budou výsledky pěkné. Dobrému výsledku přispěl i poměrně velký počet instancí databáze. Zkoušet jakoukoli cross-validation či jinou úpravu nemělo smysl.
+
+### Dataset cars
+```{r}
+confusionMatrix(ID3_prediction_cars, cars_test_data$acceptability)
+```
+#### Závěr
+Na tomto datasetu byla přesnost modelu poněkud nižší, avšak stále vynikající výsledek. To nejspíše způsobil větší počet možných klasifikací a jejich nerovnoměrné zastoupení. 
+
+### Dataset wine
+```{r}
+confusionMatrix(ID3_prediction_wine, wine_test_data$quality)
+```
+#### Závěr
+Na tomto datasetu dopadlo vyhodnocování nejhůře. Nejspíš to bylo způsobeno datasetem a jeho preprocessingem. Diskretizací číselných atributů, kterých byla většina, došlo ke značnému znepřesnění. Ta by se teoreticky dala zmenšit volbou jiného způsobu diskretizace, než je MDL metoda (kterou tato funkce defaultně využívá).
+
+# Pavel
+## Popis datasetu
+Dataset, který jsem si zvolil klasifikuje bílá a červená vína podle jejich kvality na základě atributů: kyselost, cukernatost, obsah síry, hustota, pH a obsah alkoholu.
+Dataset obsahuje celkem 6497 vín.
+
+## Nahrání dat a knihoven
+
+```{r data.wine}
+library(RWeka)
+wine.all <- read.csv("winequalityN.csv")
+```
+
+## Explorační analýza
+
+Dataset obsahuje celkem 6497 vín, z toho je 1599 červených a 4898 bílých. 7 z 13 atributů obsahují nějaké chybějící hodnoty. 
+
+```{r analysis.wine}
+head(wine.all)
+tail(wine.all)
+summary(wine.all)
+```
+
+Zajímavé je rozložení hodnot atributu quality - připomíná graf normálního rozložení. 
+
+```{r}
+wine.all$quality <- as.factor(wine.all$quality)
+plot(wine.all$quality)
+
+```
+
+Nepřekvapivé je zjištění, že červená vína nejsou tak sladká jak bílé, a naopak bílé dosahují daleko nižší kyselosti.
+
+```{r}
+plot(wine.all$fixed.acidity, wine.all$residual.sugar, col = wine.all$type)
+legend("topright", levels(wine.all$type), col = 1:2, pch = 20, title = "Wines")
+```
+
+Jde také vidět že kvalitnější vína mají obvykle vyšší obsah alkoholu.
+
+```{r}
+plot(wine.all$quality, wine.all$alcohol)
+```
+
+## Baseline model
+
+Jako první jsem se pokusil natrénovat model bez jakéhokoliv předzpracování. Výseldek dopadl nevalně, přesnost byla bohužel jen něco přes 33%.
+
+```{r}
+wine.all$quality <- as.factor(wine.all$quality)
+wine.train <- wine.all[1:((nrow(wine.all)) * 0.7), ]
+wine.test <- wine.all[(nrow(wine.all)*0.7):nrow(wine.all), ]
+
+### raw model without any preprocessing and tuning
+model.wine.raw <- J48(quality ~ ., data = wine.train)
+prediction.wine.raw <- predict(model.wine.raw, newdata = wine.test)
+references.wine.raw <- wine.test$quality
+
+confmat.wine.raw <- table(prediction.wine.raw, references.wine.raw)
+accuracy.wine.raw <- sum(diag(confmat.wine.raw)) / sum(confmat.wine.raw)
+accuracy.wine.raw
+```
+## Předzpracování
+
+Bylo nutné změnit cílovou třídu na factor. Dále je třeba se vypořádat s chybějícími hodnotami, vzhledem k tomu, že všechny atributy kde se chybějící hodnoty nacházejí jsou číselné, rozhodl jsem se k nahrazení chybějících hodnot hodnotou průměrnou. Dále jsem všechny vína z kategorií kvality 3 a 9 přesunul do kategorií 4 resp. 8, jelikož těchto vín bylo velmi málo a tyto položky negativně ovlivňovaly přesnost modelu. Jako poslední jsem data náhodně promíchal a rozdělil na trénovací a testovací množinu v poměru 7 ku 3.
+
+```{r}
+
+## removing missing values
+
+wine.all[is.na(wine.all$fixed.acidity), "fixed.acidity"] <- mean(wine.all$fixed.acidity, na.rm = T)
+wine.all[is.na(wine.all$volatile.acidity), "volatile.acidity"] <- mean(wine.all$volatile.acidity, na.rm = T)
+wine.all[is.na(wine.all$citric.acid), "citric.acid"] <- mean(wine.all$citric.acid, na.rm = T)
+wine.all[is.na(wine.all$residual.sugar), "residual.sugar"] <- mean(wine.all$residual.sugar, na.rm = T)
+wine.all[is.na(wine.all$chlorides), "chlorides"] <- mean(wine.all$chlorides, na.rm = T)
+wine.all[is.na(wine.all$pH), "pH"] <- mean(wine.all$pH, na.rm = T)
+wine.all[is.na(wine.all$sulphates), "sulphates"] <- mean(wine.all$sulphates, na.rm = T)
+
+## merging category no.3 to no.4 and no.9 to no.8
+wine.all[(wine.all$quality == 3), "quality"] <- 4
+wine.all[(wine.all$quality == 9), "quality"] <- 8
+wine.all$quality <- droplevels(wine.all$quality, exclude = c(3,9))
+
+wine.all$quality <- as.factor(wine.all$quality)
+
+##data shufling
+wine.all <- wine.all[sample(nrow(wine.all)), ] 
+
+wine.train <- wine.all[1:((nrow(wine.all)) * 0.7), ]
+wine.test <- wine.all[(nrow(wine.all)*0.7):nrow(wine.all), ]
+```
+
+## Model C4.5
+
+Na natrénování tohoto modelu jsem použil algoritmus C4.5, v jazyce R implementovaný v knihovně RWeka a také v knihovně caret. Já použil implementaci z knihovny RWeka, kde je tento algoritmus implementovaný funkcí "J48". Algoritmus C4.5 vychází ze staršího algoritmu ID3, a tento algoritmus dále rozšiřuje. Používá se ke klasifikaci a tvorbě rozhodovacích klasifikačních stromů. 
+Princip jeho funkce je následující:
+Spočte informační zisk jednotlivých atributů tak, aby co nejlépe rozdělovali danou množinu. Tento atribut se poté umístí do daného uzlu, který rozhoduje podle atributu s největším informačním ziskem a rekurzivně se pokračuje na podmnožinách daných rozdělením na předchozím uzlu.
+
+## Modely s různými parametry
+
+### Model 1
+```{r}
+model.wine.1 <- J48(quality ~ ., data = wine.train, control = Weka_control(R = F, M = 1))
+prediction.wine.1 <- predict(model.wine.1, wine.test)
+```
+
+#### Vyhodnocení modelu 1
+
+```{r}
+
+references.wine <- wine.test$quality
+
+confmat.wine.1 <- table(prediction.wine.1, references.wine)
+confmat.wine.1
+
+
+accuracy.wine.1 <- sum(diag(confmat.wine.1)) / sum(confmat.wine.1)
+accuracy.wine.1
+```
+
+
+### Model 2
+```{r}
+model.wine.2 <- J48(quality ~ ., data = wine.train, control = Weka_control(R = T, M = 50, A = T))
+prediction.wine.2 <- predict(model.wine.2, wine.test)
+```
+
+#### Vyhodnocení modelu 2
+
+```{r}
+
+confmat.wine.2 <- table(prediction.wine.2, references.wine)
+confmat.wine.2
+
+
+accuracy.wine.2 <- sum(diag(confmat.wine.2)) / sum(confmat.wine.2)
+accuracy.wine.2
+```
+
+### Model 3
+```{r}
+model.wine.3 <- J48(quality ~ ., data = wine.train, control = Weka_control(M = 200))
+prediction.wine.3 <- predict(model.wine.3, wine.test)
+```
+
+#### Vyhodnocení modelu 3
+
+```{r}
+
+confmat.wine.3 <- table(prediction.wine.3, references.wine)
+confmat.wine.3
+
+
+accuracy.wine.3 <- sum(diag(confmat.wine.3)) / sum(confmat.wine.3)
+accuracy.wine.3
+```
+
+## Vyhodnocení modelu 
+Výrazně nejlepší je konfigurace parametrů v případě č.1 kdy dosahuje přesnost něco kolem 58% což je výrazně více než zbylé dva a rovněž než základní testovací model, který dosáhl přesnosti cca. 33%.
+Bohužel model se nepodařilo natrénovat na více než 58%. Není to mnoho, je však třeba brát v úvahu několik věcí. Jednak hodnocení kvality je subjektivní záležitost, a nelze ji jednoznačně odhadnout. Druhou věcí je fakt, že naprostá většina chybných klasifikací probíhá pouze o jednu třídu, ať už výš nebo níž. Po zvážení tohoto faktu jsem mírně upravil výpočet přesnosti tak, aby se za správný odhad považovalo pokud je víno zařazeno do správné kategorie nebo nanejvýš o jednu kategorii vedle. S touto tolerancí již přesnost dosahuje zhruba 93%, je proto zřejmé, že většina chybných klasifikací je pouze o jednu třídu.
+
+```{r}
+# evaluation with toleration +- 1 class
+accuracy.wine.with.tolerance <- confmat.wine.1[1:1] + confmat.wine.1[1,2]
+for(i in 2:4){
+  for(j in (i-1):(i+1)){
+    accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine.1[i,j]
+  }
+}
+accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance + confmat.wine.1[5,4] + confmat.wine.1[5,5]
+accuracy.wine.with.tolerance <- accuracy.wine.with.tolerance / sum(confmat.wine.1)
+accuracy.wine.with.tolerance
+```
+
+## Závěr
+Tento model se při použití na tomto konkrétním datasetu příliš neosvědčil. Je to dáno pravděpodobně větším množstvím možných výsledných klasifikací mezi kterými nelze přesně rozhodnout na základě daných atributů. V ostatních použitých modelech dopadly výsledky lépe, byť ne o mnoho. V algoritmu Random Forest byla přesnost okolo 70% a při algoritmu ID3 se pohybovala kolem 65%.
+
+## Dataset mushrooms
+
+### Explorační analýza
+
+Tento dataset obsahuje 8124 položek a rozhoduje zda je houba jedovatá či nikoliv. Velikost množin jedovatých a jedlých hub je téměř stejná, žádné atributy neobsahují chybějící hodnoty. Z tohoto důvodu nebyla nutná prakticky žádná úprava ani žádné parametry modelu aby se dosáhlo přesnosti téměř 100%.
+
+```{r}
+####### loading data #######
+library(RWeka)
+mushrooms.all <- read.csv("mushrooms.csv")
+######## analysis ########
+head(mushrooms.all)
+summary(mushrooms.all)
+###### preprocessing ########
+mushrooms.all <- mushrooms.all[sample(nrow(mushrooms.all)), ]
+mushrooms.train <- mushrooms.all[1:(nrow(mushrooms.all)*0.7), ]
+mushrooms.test <- mushrooms.all[(nrow(mushrooms.all)*0.7):nrow(mushrooms.all), ]
+##### model #####
+model.mushrooms <- J48(class ~ ., mushrooms.train, control = Weka_control(R = T))
+plot(model.mushrooms)
+prediction.mushrooms <- predict(model.mushrooms, mushrooms.test)
+references.mushrooms <- mushrooms.test$class
+confmat.mushrooms <- table(prediction.mushrooms, references.mushrooms)
+confmat.mushrooms
+accuracy.mushrooms <- sum(diag(confmat.mushrooms)) / sum(confmat.mushrooms)
+accuracy.mushrooms
+```
+
+### Závěr
+
+Tento model se na konkrétní dataset hodí velmi pěkně a téměř se 100% přesností klasifikuje jednotlivé houby do správných kategorií. Je to dle mého názoru dané především tím, že tento dataset je primárně určen přesně na tyto typy úloh. Při sbírání hub bych se na něj však pravděpodobně nespoléhal. :)
+
+
+## Dataset cars
+
+Tento dataset hodnotí vozy podle jednotlivých kritérií jako nevyhovující, vyhovující, dobré a velmi dobré.
+
+```{r}
+######## loading data #######
+library(RWeka)
+cars.all <- read.csv("car.data")
+names(cars.all) <- c("buying", "maint", "doors", "persons", "lug_boot", "safety", "class")
+head(cars.all)
+summary(cars.all)
+```
+
+### Preprocesing a trénování modelu
+```{r}
+cars.all <- cars.all[sample(nrow(cars.all)), ]
+cars.train <- cars.all[1:(nrow(cars.all)*0.7), ]
+cars.test <- cars.all[(nrow(cars.all)*0.7):nrow(cars.all), ]
+model.cars <- J48(class ~ ., cars.train, control = Weka_control(R = T, M = 1))
+prediction.cars <- predict(model.cars, cars.test)
+references.cars <- cars.test$class
+confmat <- table(prediction.cars, references.cars)
+confmat
+```
+
+```{r}
+accuracy.cars <- sum(diag(confmat)) / sum(confmat)
+accuracy.cars
+```
+
+Výsledná hodnota se pohybuje kolem 85%. 
+
+### Závěr
+
+Algoritmus J48 se velmi osvědčil při tvorbě modelu nad datasetem mushrooms, kde dosahoval 100% úspěšnosti. Na datasetu cars se maximální úspěšnost pohybovala lehce pod 90% což je dle mého názoru také dobrý výsledek. Nejhorší úspěšnost model vykazoval nad datasetem wine, kde nepřesnost byla způsobena pravděpodobně velmi jemným členěním na výsledné kategorie.
+
+# Vašek
+## Výběr datasetu
+Dataset popisuje (ve velmi obecné rovině) vlasnosti aut a přijatelnost koupi vozu pro potenciálního zájemce. Vzniknul odvozením z modelu vytvořeného pro demonstraci expertních rozhodovacích systémů. 
+Obsahuje celkem 1728 vzorků, vesměs bez chybějících hodnot.
+
+### Atributy
+6 výčtových atributů, 4 možné třídy klasifikace (nepřijatelné, přijatelné, dobré, velmi dobré).
+
+* buying - pořizovací cena auta
+* maint - náklady na údržbu auta
+* doors - počet dveří auta
+* persons - počet míst v autě
+* lug_boot - velikost úložných prostor
+* safety - bezpečnostní vybavení auta
+
+### Předpoklady o datasetu
+Dataset má předpoklady dávat s modelem typu rozhodovacího stromu velice dobré výsledky - byl totiž velice pravděpodobně odvozen z klasifikátoru podobného charakteru. Zároveň bych u takto vzniklého datasetu upřednostňoval použití spíše jednoduššího modelu před modelem komplexnějším - dataset vzniklý z modelu nebude pravděpodobně zachycovat příliš mnoho šumu, navíc jsou všechny atributy výčtového typu.
+
+## Explorační analýza
+
+### Načtení datasetu
+```{r}
+#Stažení datasetu z archivu
+cars_dataset <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/car/car.data")
+#Pojmenování sloupců
+colnames(cars_dataset) <- c("buying", "maint", "doors", "persons", "lug_boot", "safety", "acceptability")
+```
+
+### Přehled dat
+
+#### Náhled dat
+```{r}
+head(cars_dataset)
+```
+Při načtení datasetu byly všechny hodnoty automaticky detekovány jako faktory (možné hodnoty viz níže), nebude už zapotřebí sloupce ručně faktorizovat.
+
+#### Shrnutí a statistiky
+```{r}
+summary(cars_dataset)
+```
+Početní zastoupení v rámci jednotlivých atributů je (až abnormálně) rovnoměrné (důsledek "umělosti" dat). Za povšimnutí stojí nerovnoměrné rozvrstvení do jednotlivých kategorií. 
+Majoritní třída zabírá 70% celého datasetu, naopak dvě třídy zabírají méně neř 5%.
+
+
+#### Vztahy atribut - třída
+Tabulky ukazují absolutní zastoupení jednotlivých hodnot atributů v jednotlivých klasifikačních třídách.
+
+##### Pořizovací cena
+```{r}
+table(cars_dataset$acceptability, cars_dataset$buying)
+```
+
+##### Cena údržby
+```{r}
+table(cars_dataset$acceptability, cars_dataset$maint)
+```
+
+##### Počet dveří
+```{r}
+table(cars_dataset$acceptability, cars_dataset$doors)
+```
+
+##### Počet míst
+```{r}
+table(cars_dataset$acceptability, cars_dataset$persons)
+```
+
+##### Velikost úložných prostor
+```{r}
+table(cars_dataset$acceptability, cars_dataset$lug_boot)
+```
+
+##### Bezpečnost vozidla
+```{r}
+table(cars_dataset$acceptability, cars_dataset$safety)
+```
+
+Z tabulek se dá vyčíst několik zajímavých postřehů:
+
+* hodnota low u atributu safety se vyskytuje pouze u vzorků třídy unacceptable
+* auta hodnocená jako very good mají atribut safety hodnocené jako high
+* auta pouze pro dvě osoby jsou unacceptable
+* auta hodnocená jako good a very good mají pořizovací cenu v kategoriích low a medium
+
+Obecně můžeme pro data výčtových typů počítat statistiky podobné korelaci.
+Uváděný příklad vychází z předpokladu, že při nezávislosti proměnných budou vzorky mezi třídy rozprostřeny rovnoměrně, naopak závislost proměnných způsobí více či méně nerovnoměrné rozvrstvení do tříd podle míry "korelace".
+Výsledný koeficient interpretujeme stejně jako klasický korelační koeficient.
+(https://en.wikipedia.org/wiki/Chi-squared_test)
+(https://datascience.stackexchange.com/questions/893/how-to-get-correlation-between-two-categorical-variable-and-a-categorical-variab)
+
+## Preprocessing
+V rámci preprocessingu ověřím, že dataset skutečně (jak je avizováno v jeho popisu) neobsahuje NA hodnoty.
+Dále se budu zabývat problematikou nevyváženosti klasifikačních tříd.
+
+### Chybějící hodnoty
+V datasetu podle jeho popisu nechybí žádné hodnoty, to ještě pro jistotu ověříme:
+
+```{r}
+#TRUE, pokud obsahuje alespoň jednu NA hodnotu
+any(is.na(cars_dataset))
+```
+
+V případě, že by v datasetu nějáké hodnoty chyběly, bych pravděpodobně v tomto případě přistoupil u menšího množství nekompletních vzorků k jejich vypuštění (domény výčtových typů jsou poměrně omezené, takže bych pravděpodobně vytvořil duplikáty, nebo šum), u většío množství bych zvažoval doplnění hodnot (např. funkce v balíku mice).
+
+### Nevyváženost tříd
+Třídy, do kterých klasifikujeme, jsou v datasetu zastoupeny následovně:
+
+* unacceptable - 70.023 %
+* acceptable - 22.222 %
+* good - 3.993 %
+* very good - 3.762 %
+
+Nevyváženost tříd může mít velký vliv na výsledný model. Pokud např. vezmu jako metriku kvality modelu accuracy, dostanu i pro naprosto nepoužitelný model, který klasifikuje do majoritní třídy, 70 %. Ve výsledku pak může být problém natrénovat slušný model, resp. vůbec interpretovat, jak dobrý model se nám povedlo natrénovat.
+To všechno musíme určitě nějákým způsobem zohlednit, nabízí se několik možností: 
+
+* oversampling - můžeme přidat náhodně vybírané kopie z minoritních tříd
+* undersampling - můžeme odstranit vzorky z majoritní třídy
+* penalizace - při trénování modelu můžeme penalizovat chyby na minoritních třídách
+* nepoměřovat model podle accuracy - F1 míra, Kappa koeficient, precision, recall...
+* přidání syntetických vzorků do datasetu
+* použití jiného algoritmu, který není tolik ovlivněn nevyvážeností tříd
+* ...
+
+Vzhledem k vlastnostem datasetu (podle popisu vzorky pokrývají celý stavový prostor) se pokusím s problémem vypořádat až ve fázi trénování a vyhodnocování modelu - především budu brát ohled na jiná měřítka, než accuracy výsledného modelu.
+
+### Rozdělení na tréninková a testovací data
+Data klasicky rozdělím na 70 % trénovacích a 30 % testovacích.
+```{r}
+#Náhodně nasamplované indexy pokrývající 70% datasetu
+training_set_inidces <- sample(nrow(cars_dataset), floor(nrow(cars_dataset) * 0.7))
+
+training_data <- cars_dataset[training_set_inidces, ]
+test_data <- cars_dataset[-training_set_inidces, ]
+```
+
+## Výběr a popis modelu
+Za model jsem vybral random forest. Jak už bylo zmíněno v úvodu, intuitivně na datasetu s auty očekávám pro random forest horší výsledky, než pro rozhodovací stromy trénované např. C4.5 nebo ID3 algoritmy. Model je (alespoň podle mého názoru) zbytečně komplexní pro zpracování tohoto druhu dat. Navíc je hlavní motivací random forestu snižovat variance error (tj. overfitting šumu v datech), pro naše data je ale potenciálně větší problém bias vůči majoritní třídě (data jsou odvozena z už dříve fungujícího modelu, takže jsou z hlediska šumu velice pravděpodobně poměrně čistá).
+
+
+### Random forest model
+Random forest je klasifikační (popř. regresní) ensemble model založený na principu rozhodovacích stromů. 
+Základní myšlenkou je natrénovat větší množství (často i několik stovek) rozhodovacích stromů, nechat predikovaný vzorek klasifikovat všechny stromy a vybrat nejčetnější výsledek.
+Random forest algoritmy budují všechny stromy zároveň, narozdíl od ID3 algoritmu volí (do určité míry) náhodně feature (resp. množinu features - pro každý strom jednu), na kterém dojde k dělení. Tím se zaručí dostatečná míra odlišnosti jednotlivých stromů - ta je potřebná k požadovanému výsledku. Pokud by naopak les obsahoval větší množství podobných (vzájemně korelujících) stromů, bude to mít na výsledky modelu spíše negativní dopad.
+Hlavním cílem random forestu je co možná nevíc eliminovat hlavní slabinu rozhodovacích stromů - vysokou náchylnost k variance errorům (tj. tendenci k overfittingu šumu v datech). Cenou za toto zlepšení je mírné zhoršení biasových chyb (tj. učení konceptů, které neexistují) a těžší interpretaci celého modelu.
+
+
+## Trénování modelu
+Model natrénuji s různými parametry, z natrénovaných modelů se pokusím vybrat ten nejvhodnější.
+
+### Bez parametrů
+```{r}
+library("caret")
+rf_model_no_params <- train(acceptability ~ ., data=training_data, method="rf")
+prediction_no_params <- predict(rf_model_no_params, test_data)
+```
+### Cross-fold validace
+```{r}
+rf_model_cross_fold <- train(acceptability ~ ., data=training_data, method="rf", trControl=trainControl(method="cv", number = 5))
+prediction_cross_fold <- predict(rf_model_cross_fold, test_data)
+```
+### Kappa metrika, bez cross-fold validace
+```{r}
+rf_model_kappa <- train(acceptability ~ ., data=training_data, method="rf", metric="Kappa")
+prediction_kappa <- predict(rf_model_kappa, test_data)
+```
+### Kappa metrika, cross-fold validace
+```{r}
+rf_model_cross_fold_kappa <- train(acceptability ~ ., data=training_data, method="rf", metric="Kappa",  trControl=trainControl(method="cv", number = 5))
+prediction_cross_fold_kappa <- predict(rf_model_cross_fold_kappa, test_data)
+```
+### Custom metrika, cross-fold validace
+Vzhledem k vlastnostem datasetu jsem se rozhodl jako jednu z metrik využít poupravenou F1 míru. Takto poupravená míra zvýhodňuje (resp. zrovnoceňuje) minoritní třídy s třídou převládající. Od tohoto přístupu si slibuji lepší výkon modelu pro minoritní třídy (přinejmenším oproti accuracy metrice).
+Níže jsou uvedeny vlastní implementace funkcí pro výpočet precision, recall a upravené F1 míry. Precision a recall výpočty jsou upraveny tak, aby se uměly vypořádat s případným dělením nulou (zvolené řešení převzato z https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure). 
+Přístup k výpočtu upravené F1 míry jde ještě potenciálně upravit přidáním vah k jednotlivým třídám.
+
+```{r}
+precision <- function(pred, obs) {
+  cm <- confusionMatrix(data=pred, reference=obs)
+  all_positives <- rowSums(cm$table)
+  true_positives <- diag(cm$table)
+  
+  prec_vec <- numeric(length(all_positives))
+  for (i in 1:length(all_positives)) {
+      tp <- true_positives[i]
+      ap <- all_positives[i]
+    
+      if (tp == 0 & ap == 0) {
+        prec_vec[i] <- 1
+        next();
+      }
+      
+      if (tp != 0 & ap == 0) {
+        prec_vec[i] <- 0
+        next()
+      }
+      prec_vec[i] <- tp / ap
+  }
+  prec_vec
+}
+
+recall <- function(pred, obs) {
+  cm <- confusionMatrix(data=pred, reference=obs)
+  true_positives <- diag(cm$table)
+  real_positives <- colSums(cm$table)
+  
+  rec_vec <- numeric(length(real_positives))
+  for (i in 1:length(real_positives)) {
+    tp <- true_positives[i]
+    rp <- real_positives[i]
+    
+    if (tp == 0 & rp == 0) {
+      rec_vec[i] <- 1
+      next();
+    }
+      
+    if (tp != 0 & rp == 0) {
+      rec_vec[i] <- 0
+      next()
+    }
+    
+    rec_vec[i] <- tp /rp  
+  }
+  rec_vec
+}
+
+f1_score <- function(pred, obs) {
+  prec <- precision(pred, obs)
+  rec <- recall(pred, obs)
+  
+  2*(prec*rec)/(prec+rec)
+}
+
+f1 <- function(data, lev = NULL, model = NULL) {
+    f1_vector <- f1_score(data$pred, data$obs)
+    f1_acc <- f1_vector[1]
+    f1_good <- f1_vector[2]
+    f1_unacc <- f1_vector[3]
+    f1_vgood <- f1_vector[4]
+    f1_val <- (f1_unacc + f1_acc + f1_good + f1_vgood) / (4)
+    c(F1 = f1_val)
+}
+
+rf_model_cross_fold_f1_score <- train(acceptability ~ ., data=training_data, method="rf", metric="F1",  trControl=trainControl(summaryFunction=f1,  method="cv", number = 5))
+prediction_cross_fold_f1_score <- predict(rf_model_cross_fold_f1_score, test_data)
+```
+
+## Vyhodnocení kvality modelu
+### Bez parametrů
+#### Confusion matrix
+```{r}
+confusionMatrix(prediction_no_params, test_data$acceptability)
+```
+#### Upravená F1 míra
+```{r}
+f1(list(pred=prediction_no_params, obs=test_data$acceptability))
+```
+### Cross-fold validace
+#### Confusion matrix
+```{r}
+confusionMatrix(prediction_cross_fold, test_data$acceptability)
+```
+#### Upravená F1 míra
+```{r}
+f1(list(pred=prediction_cross_fold, obs=test_data$acceptability))
+```
+### Kappa metrika, bez cross-fold validace
+#### Confusion matrix
+```{r}
+confusionMatrix(prediction_kappa, test_data$acceptability)
+```
+#### Upravená F1 míra
+```{r}
+f1(list(pred=prediction_kappa, obs=test_data$acceptability))
+```
+### Kappa metrika, cross-fold validace
+#### Confusion matrix
+```{r}
+confusionMatrix(prediction_cross_fold_kappa, test_data$acceptability)
+```
+#### Upravená F1 míra
+```{r}
+f1(list(pred=prediction_cross_fold_kappa, obs=test_data$acceptability))
+```
+### Custom metrika, cross-fold validace
+#### Confusion matrix
+```{r}
+confusionMatrix(prediction_cross_fold_f1_score, test_data$acceptability)
+```
+#### Upravená F1 míra
+```{r}
+f1(list(pred=prediction_cross_fold_f1_score, obs=test_data$acceptability))
+```
+
+### Závěr
+Osobně jsem očekával větší rozdíly mezi trénovanými modely. Vzhledem k využití náhodnosti v modelu Random forest se výsledky modelů běh od běhu liší, při některých bězích dopadly všechny modely v podstatě identicky, jindy lehce ve prospěch modelu s upravenou F1 mírou (a to jak pro accuracy, kappu i upravenou F1).
+Za povšimnutí stojí matice záměn, resp. typická místa, na kterých k chybám docházelo. Z tohoto hlediska je nejdůležitější, že ke špatné klasifikaci typicky docházelo hlavně mezi "sousedními" třídami (klasifikační třídy jsou zjevně seřazené, o tom ale model technicky vzato neví), především nedocházelo k záměnám mezi třídou unacceptable a good nebo very good.
+Velice pravděpodobně už nejde model natrénovat o moc lépe, pokud bych ale měl hledat další cesty ke zlepšení, pravděpodobně bych se zaměřil na nízkou precision u třídy good (tzn. nějákým způsobem bych ji zkusil při tréninku penalizovat) a na třídu acceptable obecně - v té docházelo celkově k nejvíce chybám. 
+Jako výsledný model bych navrhoval využít ten co možná nejjednodušší s výše natrénovaných.
+
+## Dataset mushrooms
+```{r}
+mushrooms_dataset <- read.csv("mushrooms.csv")
+#removing column containing the same value in all instances - train method gets confused, also it is useless
+mushrooms_dataset <- mushrooms_dataset[, c(-17)]
+
+#splitting train&test data 70:30
+train_indices_mushrooms <- sample(1:8124, 5687)
+mushrooms_train <- mushrooms_dataset[train_indices_mushrooms,]
+mushrooms_test <- mushrooms_dataset[-train_indices_mushrooms,]
+
+rf_model_mushrooms <- train(class ~ ., data=mushrooms_train, method="rf", trControl=trainControl(method="cv", number=2))
+rf_prediction_mushrooms <- predict(rf_model_mushrooms, mushrooms_test)
+confusionMatrix(rf_prediction_mushrooms, mushrooms_test$class)
+```
+### Závěr
+Klasifikace probíhá pouze do dvou tříd, tyto třídy jsou v datasetu zastoupeny rovnoměrně. Z toho důvodu by neměla být accuracy nikterak zavádějícím měřítkem pro hodnocení kvality modelu a výsledný model dosahující 100% accuracy je objektivně dobrý. 
+
+## Dataset wine
+``` {r}
+wine_dataset <- read.csv("winequalityN.csv")
+
+#train method tended to convert the numbers back to numeric class&permorf regression instead of classification
+wine_dataset$quality <- unclass(wine_dataset$quality)
+wine_dataset$quality[wine_dataset$quality == 3] <- "three"
+wine_dataset$quality[wine_dataset$quality == 4] <- "four"
+wine_dataset$quality[wine_dataset$quality == 5] <- "five"
+wine_dataset$quality[wine_dataset$quality == 6] <- "six"
+wine_dataset$quality[wine_dataset$quality == 7] <- "seven"
+wine_dataset$quality[wine_dataset$quality == 8] <- "eight"
+wine_dataset$quality[wine_dataset$quality == 9] <- "nine"
+wine_dataset$quality <- factor(wine_dataset$quality)
+
+#deal with missing values
+library(mice)
+wine_dataset <- complete(mice(wine_dataset))
+
+#split training&testing data - 70:30
+train_indices_wine <- sample(1:6497, 4548)
+wine_train <- wine_dataset[train_indices_wine, ]
+wine_test <- wine_dataset[-train_indices_wine, ]
+
+rf_model_wine <- train(quality ~ ., data=wine_train, method="rf", tuneGrid=expand.grid(.mtry=3.2), metric='Accuracy', ntree=1300, trControl=trainControl(method="cv", number=3))
+
+rf_prediction_wine <- predict(rf_model_wine, wine_test)
+
+confusionMatrix(rf_prediction_wine, wine_test$quality)
+```
+
+### Závěr
+Výsledná accuracy modelu se pohybovala mezi 66% až 70%, pravděpodobně v závislosti rozdělení dat do trénovací a testovací množiny a v závislosti na volbě split features při trénování random forest modelu. Vhodnou volbou parametrů mtry a ntree se mi povedlo zlepšit accuracy v průměru o asi dva procentní body. 
+Accuracy 70% sice není příliš dobrý výsledek, na druhou stranu naprostá většina misklasifikací proběhla pouze "o jednu třídu vedle". Pokud nám tedy jde pouze o hrubší odhad, přesnost modelu je nakonec vcelku přijatelná. 
+
+# Zhodnocení
+## Dataset mushrooms
+V případě datasetu s houbami se podařilo dosáhnout 100% accuracy u všech testovaných modelů. Vzhledem k povaze datasetu (vyrovnanost zastoupení tříd) můžeme bez problému accuracy použít jako směrodatné měřtíko kvality modelu. Pokud by bylo potřeba vybrat jeden ze tří typů trénovaných modelů, bylo by asi nejlepší vzít ten nejméně komplexní - ID3.
+
+## Dataset wine
+Dataset s vínem narozdíl od zbylých dvou obsahoval v atributech i spojité hodnoty, to způsobilo komplikace při trénování ID3. Pokud jde o accuracy, nejlépe se osvědčil model Random forest - ten dosahoval výsledků až 70%. C4.5 nedosahovalo ani 60% accuracy, ID3 dosáhlo něco málo přes 60%, výsledek byl ale dosažen na diskretizovaných datech. Jako zjevně nejlepší model se jeví Random forest model, ten dosahoval nejvyšší accuracy, navíc na původních spojitých datech. 
+Výsledek je sice na první pohled poměrně nízký, na druhou stranu v případě všech modelů docházelo téměř výhradně k záměnám o jednu kvalitativní třídu. Pokud nelpíme na přesné predikci konkrétní kvalitativní třídy a stačí nám hrubší odhad kvality, výsledky jsou vcelku dobré.
+Druhou možností, jak dosáhnout pravděpodobně i lepších výsledků, by bylo provádět místo klasifikace regresi - potom bychom buď mohli zkoušet takto získané hodnoty zaokrouhlovat, nebo místo diskrétních tříd kvality používat jako výstup spojitou hodnotu. 
+
+## Dataset cars
+Pokud jde jenom o accuracy, modely dosahovaly srovnatelných výsledků. Poměrně paradoxně se skoro nejlépe osvědčil nejméně komplexní ID3 model. Otázkou potom zůstává, jestli je accuracy při hodně nerovnoměrném zastoupení tříd vhodným měřítkem kvality modelu. Pokusy s upravenou F1 mírou a vážením chyb ale nevedli k žádnému viditelnému zlepšení. 
+Pokud by bylo třeba volit jeden z trénovaných modelů, bylo by opět asi nejlepší sáhnout po nejjednodušší variantě - ID3.
